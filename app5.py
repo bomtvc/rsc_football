@@ -12,7 +12,7 @@ import base64
 st.set_page_config(page_title="Bốc Thăm Bảng Đấu", layout="wide")
 
 # Tiêu đề ứng dụng
-st.title("🏆 BỐC THĂM BẢNG THI ĐẤU GIẢI BÓNG ĐÁ TRUYỀN THỐNG CÔNG TY TNHH ROCHDALE SPEARS 🏆")
+st.title("🏆 BỐC THĂM BẢNG THI ĐẤU GIẢI BÓNG ĐÁ TRUYỀN THỐNG ROCHDALE SPEARS 🏆")
 
 # Khởi tạo session state
 if 'positions' not in st.session_state:
