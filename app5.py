@@ -144,128 +144,7 @@ def update_result_table(position, team):
     index = int(position[1:]) - 1  # Lấy số (0-based index)
     st.session_state.result_table[group][index] = team
 
-# Giao diện chính
-st.header("Bốc thăm bảng thi đấu")
-
-col1, col2 = st.columns([1, 2])
-
-with col1:
-    # Hiển thị số đội còn lại cần bốc thăm
-    st.subheader(f"Còn lại: {len(available_teams)}/23 đội")
-    
-    if available_teams:
-        # Dropdown để chọn đội
-        selected_team = st.selectbox("Chọn đội để bốc thăm:", available_teams)
-        
-        # Nút bốc thăm
-        if st.button("Bốc thăm"):
-            st.session_state.spinning = True
-            st.session_state.current_team = selected_team
-            st.session_state.used_teams.append(selected_team)
-            st.rerun()
-    else:
-        st.success("Đã bốc thăm xong tất cả các đội!")
-        
-    # Nút reset
-    if st.button("Bắt đầu lại"):
-        for key in list(st.session_state.keys()):
-            del st.session_state[key]
-        st.rerun()
-
-with col2:
-    # Hiển thị vòng quay may mắn
-    wheel_container = st.empty()
-    result_container = st.empty()
-    
-    if st.session_state.spinning and st.session_state.available_positions:
-        with st.spinner("Đang bốc thăm..."):
-            # Hiệu ứng quay
-            progress_bar = st.progress(0)
-            
-            # Số vòng quay và thời gian quay
-            total_spins = 50  # Tổng số bước quay
-            spin_duration = 3  # Thời gian quay (giây)
-            
-            # Chọn vị trí ngẫu nhiên bằng cách xác định góc dừng
-            # Tính góc cho mỗi vị trí
-            n = len(st.session_state.available_positions)
-            segment_angle = 360 / n
-            
-            # Chọn một vị trí ngẫu nhiên
-            random_index = random.randint(0, n - 1)
-            
-            # Tính góc dừng để mũi tên chỉ vào vị trí được chọn
-            # Góc dừng = góc bắt đầu của phần tử + một nửa góc của phần tử + số vòng quay ngẫu nhiên
-            target_angle = random_index * segment_angle + segment_angle / 2
-            target_angle += random.randint(5, 10) * 360  # Thêm một số vòng quay ngẫu nhiên
-            
-            # Tạo danh sách các góc quay
-            angles = []
-            current_angle = st.session_state.wheel_angle
-            
-            # Tạo hiệu ứng quay với tốc độ giảm dần
-            for i in range(total_spins):
-                # Tính góc quay cho mỗi bước
-                progress = i / total_spins
-                
-                # Sử dụng hàm easeOutCubic để tạo hiệu ứng chậm dần
-                t = 1 - (1 - progress) ** 3
-                
-                # Góc quay hiện tại
-                current_angle = current_angle + (target_angle - current_angle) * t
-                angles.append(current_angle % 360)
-            
-            # Thực hiện quay
-            labels_pos = None
-            for i, angle in enumerate(angles):
-                # Vẽ vòng quay với góc hiện tại
-                fig, labels_pos = create_wheel(st.session_state.available_positions, angle)
-                wheel_container.pyplot(fig)
-                
-                # Cập nhật thanh tiến trình
-                progress_bar.progress(int((i + 1) / total_spins * 100))
-                
-                # Tạm dừng để tạo hiệu ứng
-                time.sleep(spin_duration / total_spins)
-            
-            # Lưu góc quay cuối cùng
-            st.session_state.wheel_angle = angles[-1] % 360
-            
-            # Xác định vị trí được chọn dựa trên góc quay cuối cùng
-            selected_position = get_selected_position(labels_pos, st.session_state.wheel_angle)
-            
-            # Lưu kết quả
-            st.session_state.results[st.session_state.current_team] = selected_position
-            st.session_state.available_positions.remove(selected_position)
-            
-            # Cập nhật bảng kết quả
-            update_result_table(selected_position, st.session_state.current_team)
-            
-            # Hiển thị kết quả
-            result_container.success(f"Kết quả: {st.session_state.current_team} → {selected_position}")
-            
-            # Kết thúc quay
-            st.session_state.spinning = False
-    else:
-        # Hiển thị vòng quay tĩnh
-        if st.session_state.available_positions:
-            fig, _ = create_wheel(st.session_state.available_positions, st.session_state.wheel_angle)
-            wheel_container.pyplot(fig)
-
-# Phần hiển thị bảng kết quả
-st.header("Kết quả bốc thăm")
-
-# Tạo DataFrame cho bảng kết quả
-result_df = pd.DataFrame({
-    'Vị trí': list(range(1, 7)),
-    'Bảng A': [st.session_state.result_table['A'][i] if i < len(st.session_state.result_table['A']) else None for i in range(6)],
-    'Bảng B': [st.session_state.result_table['B'][i] if i < len(st.session_state.result_table['B']) else None for i in range(6)],
-    'Bảng C': [st.session_state.result_table['C'][i] if i < len(st.session_state.result_table['C']) else None for i in range(6)],
-    'Bảng D': [st.session_state.result_table['D'][i] if i < len(st.session_state.result_table['D']) else None for i in range(5)] + [None],
-})
-
 # CSS để tạo bảng đẹp mắt hơn
-# Định nghĩa CSS cho bảng
 css = """
 <style>
     .styled-table {
@@ -310,66 +189,179 @@ css = """
 # Hiển thị CSS
 st.markdown(css, unsafe_allow_html=True)
 
-# Tạo HTML cho bảng
-table_html = '<table class="styled-table"><thead><tr>'
-table_html += '<th>Vị trí</th><th>Bảng A</th><th>Bảng B</th><th>Bảng C</th><th>Bảng D</th>'
-table_html += '</tr></thead><tbody>'
-
-# Thêm dữ liệu vào bảng
-for i in range(6):
-    table_html += '<tr>'
-    table_html += f'<td class="header-cell">{i+1}</td>'
+# Container 1: Phần droplist và button (trên)
+with st.container():
+    st.header("Bốc thăm bảng thi đấu")
     
-    # Bảng A
-    cell_value = st.session_state.result_table['A'][i] if i < len(st.session_state.result_table['A']) and st.session_state.result_table['A'][i] is not None else ""
-    cell_class = "empty-cell" if cell_value == "" else ""
-    cell_content = cell_value if cell_value != "" else "_____"
-    table_html += f'<td class="{cell_class}">{cell_content}</td>'
+    # Hiển thị số đội còn lại cần bốc thăm
+    st.subheader(f"Còn lại: {len(available_teams)}/23 đội")
     
-    # Bảng B
-    cell_value = st.session_state.result_table['B'][i] if i < len(st.session_state.result_table['B']) and st.session_state.result_table['B'][i] is not None else ""
-    cell_class = "empty-cell" if cell_value == "" else ""
-    cell_content = cell_value if cell_value != "" else "_____"
-    table_html += f'<td class="{cell_class}">{cell_content}</td>'
+    # Chia cột cho phần điều khiển
+    control_col1, control_col2, control_col3 = st.columns([2, 1, 1])
     
-    # Bảng C
-    cell_value = st.session_state.result_table['C'][i] if i < len(st.session_state.result_table['C']) and st.session_state.result_table['C'][i] is not None else ""
-    cell_class = "empty-cell" if cell_value == "" else ""
-    cell_content = cell_value if cell_value != "" else "_____"
-    table_html += f'<td class="{cell_class}">{cell_content}</td>'
+    with control_col1:
+        if available_teams:
+            # Dropdown để chọn đội
+            selected_team = st.selectbox("Chọn đội để bốc thăm:", available_teams)
+        else:
+            st.success("Đã bốc thăm xong tất cả các đội!")
+            selected_team = None
     
-    # Bảng D (chỉ có 5 vị trí)
-    if i < 5:
-        cell_value = st.session_state.result_table['D'][i] if i < len(st.session_state.result_table['D']) and st.session_state.result_table['D'][i] is not None else ""
-        cell_class = "empty-cell" if cell_value == "" else ""
-        cell_content = cell_value if cell_value != "" else "_____"
-        table_html += f'<td class="{cell_class}">{cell_content}</td>'
-    else:
-        # Vị trí không tồn tại trong bảng D
-        table_html += '<td class="empty-cell" style="background-color: #e0e0e0;">---</td>'
+    with control_col2:
+        # Nút bốc thăm
+        if available_teams and st.button("Bốc thăm", use_container_width=True):
+            st.session_state.spinning = True
+            st.session_state.current_team = selected_team
+            st.session_state.used_teams.append(selected_team)
+            st.rerun()
+            
+    with control_col3:
+        # Nút reset
+        if st.button("Bắt đầu lại", use_container_width=True):
+            for key in list(st.session_state.keys()):
+                del st.session_state[key]
+            st.rerun()
+
+# Container 2: Vòng xoay và kết quả bốc thăm (dưới)
+with st.container():
+    # Chia cột cho vòng xoay và kết quả
+    wheel_col, results_col = st.columns([2, 5])
     
-    table_html += '</tr>'
-
-table_html += '</tbody></table>'
-
-# Hiển thị bảng
-st.markdown(table_html, unsafe_allow_html=True)
-
-# Ẩn bảng dataframe gốc
-# st.dataframe(result_df, use_container_width=True, height=300)
-
-# Hiển thị kết quả theo từng bảng
-# st.header("Chi tiết các bảng đấu")
-
-# cols = st.columns(4)
-
-# for i, group in enumerate(['A', 'B', 'C', 'D']):
-#     with cols[i]:
-#         st.subheader(f"Bảng {group}")
-#         max_pos = 6 if group != 'D' else 5
-#         for pos in range(max_pos):
-#             team = st.session_state.result_table[group][pos]
-#             if team:
-#                 st.write(f"{group}{pos+1}: {team}")
-#             else:
-#                 st.write(f"{group}{pos+1}: _____")
+    # Cột 1: Vòng xoay
+    with wheel_col:
+        # Hiển thị vòng quay may mắn
+        wheel_container = st.empty()
+        result_container = st.empty()
+        
+        if st.session_state.spinning and st.session_state.available_positions:
+            with st.spinner("Đang quay vòng quay..."):
+                # Hiệu ứng quay
+                progress_bar = st.progress(0)
+                
+                # Số vòng quay và thời gian quay
+                total_spins = 20  # Tổng số bước quay
+                spin_duration = 2  # Thời gian quay (giây)
+                
+                # Chọn vị trí ngẫu nhiên bằng cách xác định góc dừng
+                # Tính góc cho mỗi vị trí
+                n = len(st.session_state.available_positions)
+                segment_angle = 360 / n
+                
+                # Chọn một vị trí ngẫu nhiên
+                random_index = random.randint(0, n - 1)
+                
+                # Tính góc dừng để mũi tên chỉ vào vị trí được chọn
+                # Góc dừng = góc bắt đầu của phần tử + một nửa góc của phần tử + số vòng quay ngẫu nhiên
+                target_angle = random_index * segment_angle + segment_angle / 2
+                target_angle += random.randint(5, 10) * 360  # Thêm một số vòng quay ngẫu nhiên
+                
+                # Tạo danh sách các góc quay
+                angles = []
+                current_angle = st.session_state.wheel_angle
+                
+                # Tạo hiệu ứng quay với tốc độ giảm dần
+                for i in range(total_spins):
+                    # Tính góc quay cho mỗi bước
+                    progress = i / total_spins
+                    
+                    # Sử dụng hàm easeOutCubic để tạo hiệu ứng chậm dần
+                    t = 1 - (1 - progress) ** 3
+                    
+                    # Góc quay hiện tại
+                    current_angle = current_angle + (target_angle - current_angle) * t
+                    angles.append(current_angle % 360)
+                
+                # Thực hiện quay
+                labels_pos = None
+                for i, angle in enumerate(angles):
+                    # Vẽ vòng quay với góc hiện tại
+                    fig, labels_pos = create_wheel(st.session_state.available_positions, angle)
+                    wheel_container.pyplot(fig)
+                    
+                    # Cập nhật thanh tiến trình
+                    progress_bar.progress(int((i + 1) / total_spins * 100))
+                    
+                    # Tạm dừng để tạo hiệu ứng
+                    time.sleep(spin_duration / total_spins)
+                
+                # Lưu góc quay cuối cùng
+                st.session_state.wheel_angle = angles[-1] % 360
+                
+                # Xác định vị trí được chọn dựa trên góc quay cuối cùng
+                selected_position = get_selected_position(labels_pos, st.session_state.wheel_angle)
+                
+                # Lưu kết quả
+                st.session_state.results[st.session_state.current_team] = selected_position
+                st.session_state.available_positions.remove(selected_position)
+                
+                # Cập nhật bảng kết quả
+                update_result_table(selected_position, st.session_state.current_team)
+                
+                # Hiển thị kết quả
+                result_container.success(f"Kết quả: {st.session_state.current_team} → {selected_position}")
+                
+                # Kết thúc quay
+                st.session_state.spinning = False
+        else:
+            # Hiển thị vòng quay tĩnh
+            if st.session_state.available_positions:
+                fig, _ = create_wheel(st.session_state.available_positions, st.session_state.wheel_angle)
+                wheel_container.pyplot(fig)
+    
+    # Cột 2: Kết quả bốc thăm
+    with results_col:
+        st.header("Kết quả bốc thăm")
+        
+        # Tạo DataFrame cho bảng kết quả
+        result_df = pd.DataFrame({
+            'Vị trí': list(range(1, 7)),
+            'Bảng A': [st.session_state.result_table['A'][i] if i < len(st.session_state.result_table['A']) else None for i in range(6)],
+            'Bảng B': [st.session_state.result_table['B'][i] if i < len(st.session_state.result_table['B']) else None for i in range(6)],
+            'Bảng C': [st.session_state.result_table['C'][i] if i < len(st.session_state.result_table['C']) else None for i in range(6)],
+            'Bảng D': [st.session_state.result_table['D'][i] if i < len(st.session_state.result_table['D']) else None for i in range(5)] + [None],
+        })
+        
+        # Tạo HTML cho bảng
+        table_html = '<table class="styled-table"><thead><tr>'
+        table_html += '<th>Vị trí</th><th>Bảng A</th><th>Bảng B</th><th>Bảng C</th><th>Bảng D</th>'
+        table_html += '</tr></thead><tbody>'
+        
+        # Thêm dữ liệu vào bảng
+        for i in range(6):
+            table_html += '<tr>'
+            table_html += f'<td class="header-cell">{i+1}</td>'
+            
+            # Bảng A
+            cell_value = st.session_state.result_table['A'][i] if i < len(st.session_state.result_table['A']) and st.session_state.result_table['A'][i] is not None else ""
+            cell_class = "empty-cell" if cell_value == "" else ""
+            cell_content = cell_value if cell_value != "" else "_____"
+            table_html += f'<td class="{cell_class}">{cell_content}</td>'
+            
+            # Bảng B
+            cell_value = st.session_state.result_table['B'][i] if i < len(st.session_state.result_table['B']) and st.session_state.result_table['B'][i] is not None else ""
+            cell_class = "empty-cell" if cell_value == "" else ""
+            cell_content = cell_value if cell_value != "" else "_____"
+            table_html += f'<td class="{cell_class}">{cell_content}</td>'
+            
+            # Bảng C
+            cell_value = st.session_state.result_table['C'][i] if i < len(st.session_state.result_table['C']) and st.session_state.result_table['C'][i] is not None else ""
+            cell_class = "empty-cell" if cell_value == "" else ""
+            cell_content = cell_value if cell_value != "" else "_____"
+            table_html += f'<td class="{cell_class}">{cell_content}</td>'
+            
+            # Bảng D (chỉ có 5 vị trí)
+            if i < 5:
+                cell_value = st.session_state.result_table['D'][i] if i < len(st.session_state.result_table['D']) and st.session_state.result_table['D'][i] is not None else ""
+                cell_class = "empty-cell" if cell_value == "" else ""
+                cell_content = cell_value if cell_value != "" else "_____"
+                table_html += f'<td class="{cell_class}">{cell_content}</td>'
+            else:
+                # Vị trí không tồn tại trong bảng D
+                table_html += '<td class="empty-cell" style="background-color: #e0e0e0;">---</td>'
+            
+            table_html += '</tr>'
+        
+        table_html += '</tbody></table>'
+        
+        # Hiển thị bảng
+        st.markdown(table_html, unsafe_allow_html=True)
