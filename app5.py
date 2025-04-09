@@ -222,7 +222,7 @@ audio_placeholder = st.empty()
 
 # Container 1: Phần droplist và button (trên)
 with st.container():
-    st.header("Bốc thăm bảng thi đấu")
+    st.header("Bốc thăm bảng thi đấu/ Official Group Stage Draw")
     
     # Hiển thị số đội còn lại cần bốc thăm
     st.subheader(f"Còn lại: {len(available_teams)}/23 đội")
