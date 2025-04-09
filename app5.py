@@ -9,7 +9,7 @@ from matplotlib.figure import Figure
 import base64
 
 # Thiết lập trang
-st.set_page_config(page_title="Bốc Thăm Bảng Đấu", layout="wide")
+st.set_page_config(page_title="Official Group Stage Draw", layout="wide")
 
 # Tiêu đề ứng dụng
 st.title("🏆 BỐC THĂM BẢNG THI ĐẤU GIẢI BÓNG ĐÁ TRUYỀN THỐNG ROCHDALE SPEARS 🏆\n Official Group Stage Draw – Rochdale Spears Traditional Football Tournament 2025")
@@ -346,12 +346,12 @@ with st.container():
     
     # Cột 2: Kết quả bốc thăm
     with results_col:
-        st.header("Kết quả bốc thăm")
+        st.header("Group Draw Results/ Kết quả bốc thăm")
         
         # Tạo DataFrame cho bảng kết quả
         result_df = pd.DataFrame({
             'Vị trí': list(range(1, 7)),
-            'Bảng A': [st.session_state.result_table['A'][i] if i < len(st.session_state.result_table['A']) else None for i in range(6)],
+            'Bảng/Group A': [st.session_state.result_table['A'][i] if i < len(st.session_state.result_table['A']) else None for i in range(6)],
             'Bảng B': [st.session_state.result_table['B'][i] if i < len(st.session_state.result_table['B']) else None for i in range(6)],
             'Bảng C': [st.session_state.result_table['C'][i] if i < len(st.session_state.result_table['C']) else None for i in range(6)],
             'Bảng D': [st.session_state.result_table['D'][i] if i < len(st.session_state.result_table['D']) else None for i in range(5)] + [None],
