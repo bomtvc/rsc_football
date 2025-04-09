@@ -6,6 +6,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 from matplotlib.patches import Wedge, Circle
 from matplotlib.figure import Figure
+import base64
 
 # Thiết lập trang
 st.set_page_config(page_title="Bốc Thăm Bảng Đấu", layout="wide")
@@ -144,6 +145,33 @@ def update_result_table(position, team):
     index = int(position[1:]) - 1  # Lấy số (0-based index)
     st.session_state.result_table[group][index] = team
 
+# Hàm tạo HTML để phát âm thanh
+def autoplay_audio(url):
+    audio_html = f"""
+        <audio id="wheelAudio" autoplay loop>
+            <source src="{url}" type="audio/ogg">
+            Your browser does not support the audio element.
+        </audio>
+        <script>
+            var audio = document.getElementById("wheelAudio");
+            audio.volume = 0.5;  // Đặt âm lượng ở mức 50%
+        </script>
+    """
+    return audio_html
+
+# Hàm dừng âm thanh
+def stop_audio():
+    stop_html = """
+        <script>
+            var audio = document.getElementById("wheelAudio");
+            if (audio) {
+                audio.pause();
+                audio.currentTime = 0;
+            }
+        </script>
+    """
+    return stop_html
+
 # CSS để tạo bảng đẹp mắt hơn
 css = """
 <style>
@@ -188,6 +216,9 @@ css = """
 
 # Hiển thị CSS
 st.markdown(css, unsafe_allow_html=True)
+
+# Placeholder cho audio
+audio_placeholder = st.empty()
 
 # Container 1: Phần droplist và button (trên)
 with st.container():
@@ -234,6 +265,10 @@ with st.container():
         result_container = st.empty()
         
         if st.session_state.spinning and st.session_state.available_positions:
+            # Phát âm thanh khi quay
+            audio_url = "https://vongquaymayman.co/wp-content/themes/twentytwentythree-child/assets/sound/chiecnonkydieu.ogg"
+            audio_placeholder.markdown(autoplay_audio(audio_url), unsafe_allow_html=True)
+            
             with st.spinner("Đang quay vòng quay..."):
                 # Hiệu ứng quay
                 progress_bar = st.progress(0)
@@ -300,7 +335,8 @@ with st.container():
                 # Hiển thị kết quả
                 result_container.success(f"Kết quả: {st.session_state.current_team} → {selected_position}")
                 
-                # Kết thúc quay
+                # Kết thúc quay và dừng âm thanh
+                audio_placeholder.markdown(stop_audio(), unsafe_allow_html=True)
                 st.session_state.spinning = False
         else:
             # Hiển thị vòng quay tĩnh
