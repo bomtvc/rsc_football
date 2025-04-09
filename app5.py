@@ -178,7 +178,7 @@ with col2:
     result_container = st.empty()
     
     if st.session_state.spinning and st.session_state.available_positions:
-        with st.spinner("Đang quay vòng quay..."):
+        with st.spinner("Đang bốc thăm..."):
             # Hiệu ứng quay
             progress_bar = st.progress(0)
             
