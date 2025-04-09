@@ -252,7 +252,7 @@ with col2:
             fig, _ = create_wheel(st.session_state.available_positions, st.session_state.wheel_angle)
             wheel_container.pyplot(fig)
 
-# Hiển thị bảng kết quả
+# Phần hiển thị bảng kết quả
 st.header("Kết quả bốc thăm")
 
 # Tạo DataFrame cho bảng kết quả
@@ -264,21 +264,112 @@ result_df = pd.DataFrame({
     'Bảng D': [st.session_state.result_table['D'][i] if i < len(st.session_state.result_table['D']) else None for i in range(5)] + [None],
 })
 
-# Hiển thị bảng kết quả
-st.dataframe(result_df, use_container_width=True, height=300)
+# CSS để tạo bảng đẹp mắt hơn
+# Định nghĩa CSS cho bảng
+css = """
+<style>
+    .styled-table {
+        width: 100%;
+        border-collapse: collapse;
+        margin: 25px 0;
+        font-size: 18px;
+        font-family: sans-serif;
+        box-shadow: 0 0 20px rgba(0, 0, 0, 0.15);
+    }
+    .styled-table thead tr {
+        background-color: #009879;
+        color: white;
+        text-align: center;
+    }
+    .styled-table th,
+    .styled-table td {
+        padding: 12px 15px;
+        text-align: center;
+        border: 1px solid #dddddd;
+    }
+    .styled-table tbody tr {
+        border-bottom: 1px solid #dddddd;
+    }
+    .styled-table tbody tr:nth-of-type(even) {
+        background-color: #f3f3f3;
+    }
+    .styled-table tbody tr:last-of-type {
+        border-bottom: 2px solid #009879;
+    }
+    .empty-cell {
+        color: #999;
+        font-style: italic;
+    }
+    .header-cell {
+        font-weight: bold;
+        background-color: #f0f0f0;
+    }
+</style>
+"""
+
+# Hiển thị CSS
+st.markdown(css, unsafe_allow_html=True)
+
+# Tạo HTML cho bảng
+table_html = '<table class="styled-table"><thead><tr>'
+table_html += '<th>Vị trí</th><th>Bảng A</th><th>Bảng B</th><th>Bảng C</th><th>Bảng D</th>'
+table_html += '</tr></thead><tbody>'
+
+# Thêm dữ liệu vào bảng
+for i in range(6):
+    table_html += '<tr>'
+    table_html += f'<td class="header-cell">{i+1}</td>'
+    
+    # Bảng A
+    cell_value = st.session_state.result_table['A'][i] if i < len(st.session_state.result_table['A']) and st.session_state.result_table['A'][i] is not None else ""
+    cell_class = "empty-cell" if cell_value == "" else ""
+    cell_content = cell_value if cell_value != "" else "_____"
+    table_html += f'<td class="{cell_class}">{cell_content}</td>'
+    
+    # Bảng B
+    cell_value = st.session_state.result_table['B'][i] if i < len(st.session_state.result_table['B']) and st.session_state.result_table['B'][i] is not None else ""
+    cell_class = "empty-cell" if cell_value == "" else ""
+    cell_content = cell_value if cell_value != "" else "_____"
+    table_html += f'<td class="{cell_class}">{cell_content}</td>'
+    
+    # Bảng C
+    cell_value = st.session_state.result_table['C'][i] if i < len(st.session_state.result_table['C']) and st.session_state.result_table['C'][i] is not None else ""
+    cell_class = "empty-cell" if cell_value == "" else ""
+    cell_content = cell_value if cell_value != "" else "_____"
+    table_html += f'<td class="{cell_class}">{cell_content}</td>'
+    
+    # Bảng D (chỉ có 5 vị trí)
+    if i < 5:
+        cell_value = st.session_state.result_table['D'][i] if i < len(st.session_state.result_table['D']) and st.session_state.result_table['D'][i] is not None else ""
+        cell_class = "empty-cell" if cell_value == "" else ""
+        cell_content = cell_value if cell_value != "" else "_____"
+        table_html += f'<td class="{cell_class}">{cell_content}</td>'
+    else:
+        # Vị trí không tồn tại trong bảng D
+        table_html += '<td class="empty-cell" style="background-color: #e0e0e0;">---</td>'
+    
+    table_html += '</tr>'
+
+table_html += '</tbody></table>'
+
+# Hiển thị bảng
+st.markdown(table_html, unsafe_allow_html=True)
+
+# Ẩn bảng dataframe gốc
+# st.dataframe(result_df, use_container_width=True, height=300)
 
 # Hiển thị kết quả theo từng bảng
-st.header("Chi tiết các bảng đấu")
+# st.header("Chi tiết các bảng đấu")
 
-cols = st.columns(4)
+# cols = st.columns(4)
 
-for i, group in enumerate(['A', 'B', 'C', 'D']):
-    with cols[i]:
-        st.subheader(f"Bảng {group}")
-        max_pos = 6 if group != 'D' else 5
-        for pos in range(max_pos):
-            team = st.session_state.result_table[group][pos]
-            if team:
-                st.write(f"{group}{pos+1}: {team}")
-            else:
-                st.write(f"{group}{pos+1}: _____")
+# for i, group in enumerate(['A', 'B', 'C', 'D']):
+#     with cols[i]:
+#         st.subheader(f"Bảng {group}")
+#         max_pos = 6 if group != 'D' else 5
+#         for pos in range(max_pos):
+#             team = st.session_state.result_table[group][pos]
+#             if team:
+#                 st.write(f"{group}{pos+1}: {team}")
+#             else:
+#                 st.write(f"{group}{pos+1}: _____")
